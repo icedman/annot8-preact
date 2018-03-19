@@ -18,9 +18,10 @@ export default class Debug extends Component {
             annotations.push( (<li>{a.range}</li>) )
         });
 
-        return <div>
+        return <div class="annot8-ui">
         <h2>Debug</h2>
             <ul>
+            <li><label>Menu:</label> { props.menu }</li>
             <li><label>Focus:</label> { props.focus }</li>
             <li><label>Selection:</label> { selection }</li>
             <li><label>Range:</label> { range }</li>

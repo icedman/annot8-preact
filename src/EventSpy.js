@@ -7,12 +7,9 @@ var selectionChangedCallback = null;
 var documentResizeCallback = null;
 var mouseUpCallback = null;
 var keyCallback = null;
-var isRunning = false;
 
 function isElementWithin(elm) {
   while(elm) {
-    if (elm.className == 'annot8-toolbar')
-      return false;
     if (elm === rootElement) {
       return true;
     }
@@ -21,10 +18,19 @@ function isElementWithin(elm) {
   return false;
 }
 
-function onSelectionChange(evt) {
-  if (!isRunning)
-    return;
+function isElementWithinUI(elm) {
+  while(elm) {
+    if (elm.className == 'annot8-ui')
+      return true;
+    if (elm === rootElement) {
+      return false;
+    }
+    elm = elm.parentElement;
+  }
+  return false;
+}
 
+function onSelectionChange(evt) {
   /* evt is not used */
 
   var hasSelection = false;
@@ -62,28 +68,30 @@ function onSelectionChange(evt) {
 }
 
 function onDocumentResize() {
-  if (!isRunning)
-    return;
   documentResizeCallback();
 }
 
 function onMouseUp(evt) {
-  if (!isRunning)
-    return;
   if (selection)
     return;
+
   // check within
+  if (isElementWithinUI(evt.srcElement)) {
+    return;
+  }
   if (isElementWithin(evt.srcElement)) {
     mouseUpCallback({x:evt.pageX, y:evt.pageY, sx:evt.screenX, sy:evt.screenY});
   }
 }
 
 function onTouchStart(evt) {
-  if (!isRunning)
-    return;
   if (selection)
     return;
+
   // check within
+  if (isElementWithinUI(evt.srcElement)) {
+    return;
+  }
   if (isElementWithin(evt.srcElement)) {
     var touch = evt.changedTouches[0];
     // var touch = evt.touches[0];
@@ -103,17 +111,12 @@ function onKeyDown(evt) {
 }
 
 function start(element, callback1, callback2, callback3, callback4) {
-  if (isRunning) {
-    return;
-  }
-
   rootElement = element;
   selectionChangedCallback = callback1;
   documentResizeCallback = callback2;
   mouseUpCallback = callback3;
   keyCallback = callback4;
 
-  isRunning = true;
   document.addEventListener('selectionchange', onSelectionChange);
   window.addEventListener('resize', onDocumentResize)
   window.addEventListener('mouseup', onMouseUp);
@@ -123,20 +126,7 @@ function start(element, callback1, callback2, callback3, callback4) {
   document.addEventListener("keydown", onKeyDown);
 }
 
-function pause() {
-  isRunning = false;
-}
-
-function resume() {
-  isRunning = true;
-}
-
 function stop() {
-  if (!isRunning) {
-    return;
-  }
-
-  isRunning = false;
   document.removeEventListener('selectionchange', onSelectionChange);
   window.removeEventListener('resize', onDocumentResize)
   window.removeEventListener('mouseup', onMouseUp);
@@ -148,7 +138,5 @@ function stop() {
 
 export default {
   start: start,
-  stop: stop,
-  pause: pause,
-  resume: resume
+  stop: stop
 };

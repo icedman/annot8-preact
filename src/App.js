@@ -5,6 +5,7 @@ import { toRange, fromRange } from 'xpath-range';
 
 import Debug from './Debug.js';
 import Highlights from './Highlights.js';
+import UI from './UI.js';
 
 export default class App extends Component {
 
@@ -26,10 +27,25 @@ export default class App extends Component {
 
             // ui
             focus: null,
-            lastFocus: null
+            menu: null,
+            subMenu: null,
+            tag: ''
         };
 
         this.methods();
+
+        Object.assign(this.$api,{
+          annotate: (params) => this.annotate(params),
+          erase: (params) => this.erase(params),
+          comment: (params) => this.comment(params),
+          menu: (params) => this.requestMenu(params),
+          annotation: () => this.annotation(),
+          clear: () => {
+            this.setState({ focus: null });
+            this.setState({ menu: null, subMenu: null });
+            this.clearSelection();
+          }
+        });
     }
 
     componentDidMount() {
@@ -62,7 +78,7 @@ export default class App extends Component {
         EventSpy.start(this.$root,
             /* selection callback */
             (sel, range) => {
-                this.setState( { selectionBounds: { ready: false } } );
+                this.setState({ selectionBounds: { ready: false } });
                 this.onSelectionChanged(sel, range);
             },
             /* resize callback */
@@ -71,23 +87,15 @@ export default class App extends Component {
             },
             /* mouse callback */
             (pos) => {
-                console.log(pos);
-                  // this.log(pos);
-                this.setState( { selectionBounds: { ready: false } } );
+                this.setState({ menu: null, subMenu: null });
+                this.setState({ selectionBounds: { ready: false } });
                 this.onMouseUp(pos);
             },
             /* key callback */
             (keycode) => {
-                console.log(keycode);
               if (keycode == 27) {
-                
-                // cancel everything (immediately)
-                // this.currentToolbar = '';
-                // this.focus = null;
-                // this.lastFocus = null;
-
+                this.setState({ tag: '', menu: null, subMenu: null });
                 this.clearSelection();
-                this.setState({ lastFocus: null }); 
               }
             }
         );
@@ -98,19 +106,19 @@ export default class App extends Component {
         Object.assign(this,
         {
             onSelectionChanged: _.debounce(function(sel, range) {
-                this.setState( { selection : sel } );
-                this.setState( { range : range ? fromRange(range, this.$root) : null } );
-                this.setState( { selectionBounds: { ready: false } } );
+                this.setState({ selection : sel });
+                this.setState({ range : range ? fromRange(range, this.$root) : null });
+                this.setState({ selectionBounds: { ready: false } });
                 this.calculateSelectionBounds(range);
                 if (range) {
                     this.setState({ focus: null });
+                    this.setState({ menu: 'create' });
                 }
             }, 50),
 
             onDocumentResized: _.debounce(()=>{
-                this.setState( { offset: null } );
+                this.setState({ offset: null });
                 this.draw();
-                // console.log('on document resized ' + this.time);
             }, 50),
 
             onMouseUp: _.debounce(function(pos) {
@@ -136,7 +144,6 @@ export default class App extends Component {
                     if (left < pos.x && right > pos.x &&
                         top < pos.y && bottom > pos.y) {
                         this.setState({ focus: parseInt(n.dataset.idx) });
-                        this.setState({ lastFocus: this.state.focus });
                         rects.push({x:pos.x, y:h.y, width:2, height:h.bottom-h.top});
                     }
 
@@ -147,29 +154,68 @@ export default class App extends Component {
                         let timeoutId = setTimeout(() => {
                             let rect = this.calculateBoundsFromRects(rects);
                             rect.ready = true;
-                            this.setState( { selectionBounds: rect });
+                            this.setState({ selectionBounds: rect });
+                            this.setState({ menu: 'edit' });
                         }, 50);
                     }
                 });
             }, 50),
 
+            _reindex(items) {
+              let idx = 0;
+              items.forEach( (item)=> { item.idx=idx++; } );
+            },
+
             _createAnnotation(params) {
                 let annotation = {
                   quote: this.state.selection.toString(),
                   range: JSON.stringify(this.state.range),
-                  rects: [],
-                  // tag: this.tag
+                  tag: params.tag || this.state.tag,
+                  rects: []
                 };
-                this.setState({ annotations: [ ...this.state.annotations, annotation ]})
+
+                let annotations = [ ...this.state.annotations, annotation ];
+                this._reindex(annotations);
+                this.setState({ annotations: annotations });
+
+                // this.onCreate(annotation)
             },
 
             _updateAnnotation(params) {
+              try {
+                  let annotation = this.state.annotations[params.id];
+                  let annotations = [ ...this.state.annotations ];
+                  annotations.splice(params.id,1);
+                  
+                  if (params.tag != undefined) {
+                    annotation.tag = params.tag;
+                  }
+                  if (params.comment != undefined) {
+                    annotation.comment = params.comment;
+                  }
 
+                  annotations.push(annotation);
+                  this._reindex(annotations);
+
+                  this.setState({ annotations: annotations });
+                  this.draw();
+                  this.clearSelection();
+
+                  // this.onUpdate(annotation);
+              } catch(e) {
+                  // why?
+                  console.log(e);
+              }
+            },
+
+            annotation() {
+              if (this.state.focus != null) {
+                return this.state.annotations[this.state.focus];
+              }
             },
 
             annotate(params) {
-              // params = params || {};
-              // this.tag = params.tag || '';
+              params = params || {};
 
               if (this.state.selection) {
                 this._createAnnotation(params);
@@ -179,7 +225,6 @@ export default class App extends Component {
 
               this.draw();
               this.clearSelection();
-              // this.currentToolbar = '';
             },
 
             comment(params) {
@@ -194,11 +239,9 @@ export default class App extends Component {
                     this.setState({ annotations: annotations });
                     this.draw();
                     this.clearSelection();
-                    this.setState({ lastFocus: null }); 
 
                     // this.onDelete(annotation);
                 } catch(e) {
-                    console.log(e);
                     // why?
                 }
             },
@@ -214,28 +257,26 @@ export default class App extends Component {
                   document.selection.empty();
               }
 
-              this.setState( { selection: null });
-              this.setState( { range: null });
-              this.setState( { focus: null });
+              this.setState({ selection: null });
+              this.setState({ range: null });
+              this.setState({ focus: null });
             },
 
             calculateSelectionBounds: _.debounce(function(range) {
               if (range == null)
                 return;
 
-              // if (this.$config.mobile) {
-              //   this.selectionBounds.ready = true;
-              //   return;
-              // }
+              if (this.$config.mobile) {
+                this.setState({ ready: true });
+                return;
+              }
 
               try {
                 let rect = this.calculateBoundsFromRects(range.getClientRects());
                 rect.ready = true;
-                this.setState( { selectionBounds: rect } );
-                console.log(this.selectionBounds);
+                this.setState({ selectionBounds: rect });
               } catch(e) {
                 // this.log(e);
-                console.log(e);
               }
             }, 450),
 
@@ -290,7 +331,7 @@ export default class App extends Component {
             }, 250),
 
             draw() {
-                // TODO re-renders each time!
+                // TODO re-renders each time!?
                 this.state.annotations.forEach(a=> { this.drawAnnotation(a) });
 
                 // first, position the canvas
@@ -305,7 +346,7 @@ export default class App extends Component {
                     this.accountForOffsets();
                 }
 
-                this.setState( { canvas: canvas });
+                this.setState({ canvas: canvas });
 
                 let rects = [];
                 let idx = 0;
@@ -364,21 +405,44 @@ export default class App extends Component {
                 annotation.rects.push(rect);
               }
             },
+
+            requestMenu(menu) {
+              if (this.state.subMenu == menu) {
+                menu = ''; // toggle
+              }
+              this.setState({ subMenu: menu });
+            }
         });
     }
 
     render(props, state) {
+        let showCreateUI = (state.menu == 'create' && state.selection!=null);
+        let showEditUI = (state.menu == 'edit' && state.focus!=null);
+        let showAnyUI = showCreateUI | showEditUI;
+
         return <div id="annot8AppElement">
             <Debug
+                menu={ state.menu + (state.subMenu ? '-' + state.subMenu : '') }
                 focus={ state.focus }
                 selection={ state.selection }
                 range={ state.range }
                 bounds={ state.selectionBounds }
                 annotations={ state.annotations }
             ></Debug>
-            { state.selection ? (<button onClick={ e => this.annotate({}) }>Annotate</button>) : null }
-            { state.focus!= null ? (<button onClick={ e => this.erase(state.focus) }>Erase</button>) : null }
-            <Highlights focus={ state.focus } offset={ state.offset } canvas={ state.canvas } highlights={ state.highlights }></Highlights>
+            
+            <div class="annot8-ui">
+            { showCreateUI ? (<button onClick={ e => this.annotate({}) }>Annotate</button>) : null }
+            { showEditUI ? (<button onClick={ e => this.erase(state.focus) }>Erase</button>) : null }
+            </div>
+
+            <Highlights
+                focus={ state.focus }
+                offset={ state.offset }
+                canvas={ state.canvas }
+                highlights={ state.highlights }>
+            </Highlights>
+
+            { showAnyUI ? (<UI menu={ state.menu } subMenu={state.subMenu} ></UI>) : null }
         </div>;
     }
 }

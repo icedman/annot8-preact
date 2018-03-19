@@ -30,6 +30,28 @@
     </article>
     
     <div id="app">app</div>
+    <script>
+    var annot8Config = {
+    buttons: [
+        { action:'annotate',  title:'Highlight', icon:'#si-entypo-brush',     tool: 'create' },
+        { action:'tags',      title:'Tag', icon:'#si-awesome-tags',   tool: 'create' },
+
+        { action:'tags',      title:'Tag', icon:'#si-awesome-tags',   tool: 'tags' },
+        { action:'annotate',  title:'Tag', icon:'#si-awesome-tag',    tool: 'tags', tag: 'tag1' },
+        { action:'annotate',  title:'Tag', icon:'#si-awesome-tag',    tool: 'tags', tag: 'tag2' },
+        { action:'annotate',  title:'Tag', icon:'#si-awesome-tag',    tool: 'tags', tag: 'tag3' },
+        { action:'annotate',  title:'Tag', icon:'#si-awesome-tag',    tool: 'tags', tag: 'tag4' },
+        { action:'annotate',  title:'Tag', icon:'#si-awesome-tag',    tool: 'tags', tag: 'tag5' },
+        // { action:'annotate',  title:'Tag', icon:'#si-awesome-underline', tool: 'tags', tag: 'tag6' },
+
+        { action:'tags',      title:'Tag',       icon:'#si-awesome-tags',     tool: 'edit' },
+        // { action:annot8Tweet, title:'Tweet',     icon:'#si-awesome-twitter',  tool: 'edit' },
+        // { action:annot8FB,    title:'Facebook',  icon:'#si-awesome-facebook', tool: 'edit' },
+        { action:'comment', title:'Comment',   icon:'#si-awesome-comment',  tool: 'edit' }, // not ready
+        { action:'erase',   title:'Erase',     icon:'#si-bootstrap-erase',  tool: 'edit' }
+      ]
+    };
+    </script>
     <script src="/dist/build.js"></script>
   </body>
 </html>

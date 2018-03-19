@@ -2,21 +2,6 @@
 import { h, render, Component } from 'preact';
 import { _ } from './libs.js';
 
-/*
-<!-- HTML5 based renderer -->
-<div class="annot8-canvas annot8-disableSelection annot8-canvas-html"
-    style="display:block;position: absolute; top:0px; left:0px"
-    :style="getStyleRect">
-  <div class="annot8-hl"
-    :class="[ getHighlightClass(h) ]"
-    v-for="(h, index) in highlights"
-    style='position:absolute;display:block'
-    :style="[ {'top': h.y + 'px' }, {'left': h.x + 'px' }, {'width': h.width + 'px' } , {'height': h.height + 'px' }]"
-    :data-idx="h.idx">
-  </div>
-</div>
-*/
-
 class Highlight extends Component {
     render(props, state) {
         let r = props.rect;
@@ -24,17 +9,21 @@ class Highlight extends Component {
             return h();
         }
         let opacity = props.focused ? 0.9 : 0.4;
+        let cls = [ 'annot8-hl' ];
+        if (props.focused)
+            cls.push('annot8-active');
+        if (r.tag) {
+            cls.push(`annot8-hl-${r.tag}`);
+        }
         let style = {
             position: 'absolute',
             display: 'block',
             top: r.y + 'px',
             left: r.x + 'px',
             width: r.width + 'px',
-            height: r.height + 'px',
-            backgroundColor: 'red',
-            opacity: opacity
+            height: r.height + 'px'
         };
-        return <div class='annot8-hl' data-idx={r.idx} style={style}></div>
+        return <div class={cls.join(' ')} data-idx={r.idx} style={style}></div>
     }
 }
 
