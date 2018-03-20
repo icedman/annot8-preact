@@ -9,10 +9,13 @@ export default class UI extends Component {
 
         this.state = {
             ui: '',
-            toolbarSize: {ready:false}
+            toolbarRect: {ready:false}
         };
 
         this.methods();
+    }
+
+    componentDidMount() {
     }
 
     methods() {
@@ -20,40 +23,54 @@ export default class UI extends Component {
             draw: _.debounce(function() {
                 let toolbarElement = document.querySelector('.annot8-toolbar-inner');
                 if (toolbarElement && toolbarElement.offsetWidth) {
-                    let size = { 
+                    let rect = {
+                        offsetX: 0,
+                        offsetY: 0,
                         height: toolbarElement.offsetHeight + 4,
                         width: toolbarElement.offsetWidth,
-                        ready: true
+                        ready: false
                     };
-                    this.setState({toolbarSize:size});
+                    this.setState({toolbarRect:rect});
+                    setTimeout(()=> {
+                    let toolbarContainerElement = document.querySelector('.annot8-toolbar-container');
+                    let offsetRect = toolbarContainerElement.getBoundingClientRect();
+                            let rect = this.state.toolbarRect;
+                            rect.ready = true;
+                            rect.offsetX = (offsetRect.x || offsetRect.left) + window.scrollX;
+                            rect.offsetY = (offsetRect.y || offsetRect.top) + window.scrollY;
+                            this.setState({toolbarRect:rect});
+                        }, 0)
                 }
-            }, 150),
+            }, 50),
         });
     }
 
     onAction(action, btn) {
-        // this.$api.debug.log(action);
+        this.$api.debug.log(action);
 
         if (typeof(action) == 'function') {
             action(this.$api.annotation);
             return;
         }
 
-        let tag = btn.tag || '';
-        let id = null;
-        if (this.$api.annotation()) {
-            id = this.$api.annotation().idx;
+        let params = {
+            tag: btn.tag || '',
         }
-        
+        if (this.$api.annotation()) {
+            params.id = this.$api.annotation().id;
+        }
+
+        this.$api.debug.log(params);
+
         switch(action) {
         case 'annotate':
-            this.$api.annotate({id:id, tag:tag});
+            this.$api.annotate(params);
             break;
         case 'tags':
             this.$api.menu('tags');
             break;
         case 'erase':
-            this.$api.erase(this.$api.annotation.idx);
+            this.$api.erase(this.$api.annotation().id);
             break;
         }
     }
@@ -81,10 +98,7 @@ export default class UI extends Component {
 
         let bounds = this.$api.selectionBounds();        
 
-        let containerStyle = {
-            position: 'fixed',
-            bottom: '10px'
-        }
+        let containerStyle = { position: 'absolute', top: '0px', left: '0px' };
 
         let top = 0;
         let left = 0;
@@ -92,13 +106,13 @@ export default class UI extends Component {
 
             containerStyle = { position: 'absolute', top: '0px', left: '0px' };
             
-            left = bounds.x + (bounds.width/2) - (this.state.toolbarSize.width/2);
-            top = bounds.y - this.state.toolbarSize.height;
+            left = bounds.x + (bounds.width/2) - (this.state.toolbarRect.width/2);
+            top = bounds.y - this.state.toolbarRect.height;
 
             // force within screen
             let sw = window.screen.availWidth * 0.85;
             let sy = window.scrollY;
-            let tw = this.state.toolbarSize.width * 1.25;
+            let tw = this.state.toolbarRect.width * 1.25;
             if (left + tw >= sw) {
                 left = sw - tw;
             } else if (left < 40) {
@@ -107,24 +121,33 @@ export default class UI extends Component {
             if (top - sy < 0) {
                 top = bounds.y + bounds.height + 10;
             }
+
+            left -= this.state.toolbarRect.offsetX;
+            top -= this.state.toolbarRect.offsetY;
         }
 
-        Object.assign(containerStyle, {
-            zIndex: 999,
-            opacity: (bounds.ready && this.state.toolbarSize.ready) ? 1 : 0
-        });
-
         let toolbarStyle = {
+            // border: '2px solid blue',
             position: 'absolute',
             top: top + 'px',
             left: left + 'px'
         }
 
-        // let ts = JSON.stringify(toolbarStyle);
+        if (this.$config.mobile) {
+            containerStyle = { position: 'fixed', left: '0px', bottom: '10px' };
+            toolbarStyle = { position: 'relative', top: '0px', left: '0px' };
+        }
+
+        Object.assign(containerStyle, {
+            zIndex: 999,
+            // border: '2px solid red',
+            minHeight: '50px',
+            opacity: (bounds.ready && this.state.toolbarRect.ready) ? 1 : 0
+        });
 
         let uiState = ui + buttons.length;
         if (uiState != this.state.ui && bounds.ready) {
-            this.setState({ui:uiState, toolbarSize: {ready:false}});
+            this.setState({ui:uiState, toolbarRect: {ready:false}});
             this.draw();
         }
 

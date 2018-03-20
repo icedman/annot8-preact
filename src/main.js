@@ -26,6 +26,10 @@ try {
       || navigator.userAgent.match(/BlackBerry/i)
       || navigator.userAgent.match(/Windows Phone/i)
     );
+
+    if (!Component.prototype.$config.mobile) {
+      Component.prototype.$config.mobile = document.querySelector('html').offsetWidth < 600 ? 'smallScreen' : null;
+    }
     // Component.prototype.$config.mobile = true;
 } catch(e) {
 }

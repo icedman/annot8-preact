@@ -21,9 +21,6 @@ export default class Debug extends Component {
     log(msg) {
         if (!this.$config.debug)
             return;
-
-        console.log(msg);
-
         let logs = [...this.state.logs];
         logs.push(msg);
         this.setState({logs:logs});
@@ -48,13 +45,28 @@ export default class Debug extends Component {
         });
 
         let logs = [];
-        this.state.logs.forEach( a=> {
-            logs.push( (<li>Error: {a}</li>) )
+        this.state.logs.forEach( log=> {
+            var type = 'Log';
+            var msg = log;
+            if (typeof(log) == 'object' && log.type && log.msg) {
+                type = log.type;
+                msg = log.msg;
+            }
+            if (typeof(msg) == 'object') {
+                msg = JSON.stringify(msg);
+            }
+            logs.push( (<li>{type}: {msg}</li>) )
         });
+
+        let annot = '';
+        if (this.$api.annotation()) {
+            annot = JSON.stringify(this.$api.annotation());
+        }
 
         return <div class="annot8-ui">
         <h2>Debug</h2>
             <ul>
+            <li><label>Annotation:</label> { annot } </li>
             <li><label>Menu:</label> { props.menu }</li>
             <li><label>Focus:</label> { props.focus }</li>
             <li><label>Selection:</label> { selection }</li>

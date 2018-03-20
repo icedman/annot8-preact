@@ -283,6 +283,8 @@ export default class App extends Component {
             },
 
             annotate(params) {
+              this.$api.debug.log(params);
+
               params = params || {};
 
               if (this.state.selection) {
@@ -399,7 +401,7 @@ export default class App extends Component {
                 this.setState({ offset: { x: rootRect.left - canvasRect.left,y: rootRect.top - canvasRect.top } })
               } catch(e) {
               }
-            }, 250),
+            }, 0),
 
             draw() {
                 // TODO re-renders each time!?
@@ -496,27 +498,26 @@ export default class App extends Component {
         let showCreateUI = (state.menu == 'create' && state.selection!=null);
         let showEditUI = (state.menu == 'edit' && state.focus!=null);
         let showAnyUI = showCreateUI | showEditUI;
-
         return <div>
             <Debug
-                menu={ state.menu + (state.subMenu ? '-' + state.subMenu : '') }
-                focus={ state.focus }
-                selection={ state.selection }
-                range={ state.range }
-                bounds={ state.selectionBounds }
-                annotations={ state.annotations }
+                menu={state.menu + (state.subMenu ? '-' + state.subMenu : '')}
+                focus={state.focus}
+                selection={state.selection}
+                range={state.range}
+                bounds={state.selectionBounds}
+                annotations={state.annotations}
             ></Debug>
 
             <Highlights
-                focus={ state.focus }
-                offset={ state.offset }
-                canvas={ state.canvas }
-                highlights={ state.highlights }>
+                focus={state.focus}
+                offset={state.offset}
+                canvas={state.canvas}
+                highlights={state.highlights}>
             </Highlights>
 
             <Icons></Icons>
 
-            { showAnyUI ? (<UI menu={ state.menu } subMenu={state.subMenu} ></UI>) : null }
+            {showAnyUI ? <UI menu={state.menu} subMenu={state.subMenu}></UI> : <div></div>}
         </div>;
     }
 }
