@@ -10,9 +10,8 @@ var keyCallback = null;
 
 function isElementWithin(elm) {
   while(elm) {
-    if (elm === rootElement) {
+    if (elm === rootElement)
       return true;
-    }
     elm = elm.parentElement;
   }
   return false;
@@ -20,11 +19,10 @@ function isElementWithin(elm) {
 
 function isElementWithinUI(elm) {
   while(elm) {
-    if (elm.className == 'annot8-ui')
+    if (elm.className.indexOf && elm.className.indexOf('annot8-ui')!=-1)
       return true;
-    if (elm === rootElement) {
+    if (elm === rootElement)
       return false;
-    }
     elm = elm.parentElement;
   }
   return false;
@@ -79,9 +77,9 @@ function onMouseUp(evt) {
   if (isElementWithinUI(evt.srcElement)) {
     return;
   }
-  if (isElementWithin(evt.srcElement)) {
+  // if (isElementWithin(evt.srcElement)) {
     mouseUpCallback({x:evt.pageX, y:evt.pageY, sx:evt.screenX, sy:evt.screenY});
-  }
+  // }
 }
 
 function onTouchStart(evt) {
@@ -92,7 +90,7 @@ function onTouchStart(evt) {
   if (isElementWithinUI(evt.srcElement)) {
     return;
   }
-  if (isElementWithin(evt.srcElement)) {
+  // if (isElementWithin(evt.srcElement)) {
     var touch = evt.changedTouches[0];
     // var touch = evt.touches[0];
     mouseUpCallback({
@@ -101,7 +99,7 @@ function onTouchStart(evt) {
       sx:touch.screenX,
       sy:touch.screenY,
       evt:'touch'});
-  }
+  // }
 }
 
 function onKeyDown(evt) {

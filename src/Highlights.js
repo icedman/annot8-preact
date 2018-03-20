@@ -23,7 +23,7 @@ class Highlight extends Component {
             width: r.width + 'px',
             height: r.height + 'px'
         };
-        return <div class={cls.join(' ')} data-idx={r.idx} style={style}></div>
+        return <div class={cls.join(' ')} data-id={r.id} style={style}></div>
     }
 }
 
@@ -40,7 +40,7 @@ export default class Highlights extends Component {
         };
         let highlights = [];
         (props.highlights || []).forEach(highlight => {
-            highlights.push( (<Highlight focused={highlight.idx==props.focus} rect={highlight}></Highlight>) )
+            highlights.push( (<Highlight focused={highlight.id==props.focus} rect={highlight}></Highlight>) )
         });
         return <div class='annot8-canvas' style={ style }>
         { highlights }

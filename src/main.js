@@ -8,7 +8,7 @@ Component.prototype.$api = {};
 Component.prototype.$config = {
   selector: [ 'article' ],
   debug: true,
-  svg: true,
+  // svg: true,
   mobile: false
 };
 
@@ -30,4 +30,4 @@ try {
 } catch(e) {
 }
 
-render(<App />, document.querySelector('#app'));
+render(<App />, document.querySelector('#annot8-app'));

@@ -6,6 +6,7 @@ import { toRange, fromRange } from 'xpath-range';
 import Debug from './Debug.js';
 import Highlights from './Highlights.js';
 import UI from './UI.js';
+import Icons from './Icons.js';
 
 export default class App extends Component {
 
@@ -40,6 +41,7 @@ export default class App extends Component {
           comment: (params) => this.comment(params),
           menu: (params) => this.requestMenu(params),
           annotation: () => this.annotation(),
+          selectionBounds: () => this.state.selectionBounds,
           clear: () => {
             this.setState({ focus: null });
             this.setState({ menu: null, subMenu: null });
@@ -68,8 +70,7 @@ export default class App extends Component {
               break;
             }
         }
-        this.$el = document.querySelector('#annot8AppElement');
-
+        this.$el = document.querySelector('#annot8-app');
         try {
             this.$root.appendChild(this.$el);
         } catch(e) {
@@ -86,7 +87,7 @@ export default class App extends Component {
                 this.onDocumentResized();
             },
             /* mouse callback */
-            (pos) => {
+            (pos, src) => {
                 this.setState({ menu: null, subMenu: null });
                 this.setState({ selectionBounds: { ready: false } });
                 this.onMouseUp(pos);
@@ -99,12 +100,78 @@ export default class App extends Component {
               }
             }
         );
+
+        this.onRead();
     }
 
     // a little bit declarative
     methods() {
         Object.assign(this,
         {
+            loadData(data) {
+              let annotations = [];
+              (data || []).forEach(a=> {
+                annotations.push(Object.assign(a, { rects:[] }));
+              });
+
+              this.setState({annotations: annotations});
+
+              this.draw();
+              this.clearSelection();
+            },
+
+            onRead() {
+              let storage = this.$config.storage || this.$config.source;
+              if (typeof(storage.read) == 'function') {
+                storage.read(this.$http)
+                .then((data) => {
+                  this.loadData(data);
+                })
+                .catch((err) => {
+                  this.$api.debug.log(err);
+                });
+                return;
+              }
+            },
+
+            onCreate(annotation) {
+              let storage = this.$config.storage || this.$config.source;
+              if (typeof(storage.create) == 'function') {
+                storage.create(this.$http, this.state.annotations, annotation)
+                .then((data) => {
+                })
+                .catch((err) => {
+                  this.$api.debug.log(err);
+                });
+                return;
+              }
+            },
+
+            onUpdate(annotation) {
+              let storage = this.$config.storage || this.$config.source;
+              if (typeof(storage.update) == 'function') {
+                storage.update(this.$http, this.state.annotations, annotation)
+                .then((data) => {
+                })
+                .catch((err) => {
+                  this.$api.debug.log(err);
+                });
+                return;
+              }
+            },
+
+            onDelete(annotation) {
+              let storage = this.$config.storage || this.$config.source;
+              if (typeof(storage.delete) == 'function') {
+                storage.delete(this.$http, this.state.annotations, annotation)
+                .then((data) => {
+                })
+                .catch((err) => {
+                  this.$api.debug.log(err);
+                });
+              }
+            },
+
             onSelectionChanged: _.debounce(function(sel, range) {
                 this.setState({ selection : sel });
                 this.setState({ range : range ? fromRange(range, this.$root) : null });
@@ -143,7 +210,7 @@ export default class App extends Component {
 
                     if (left < pos.x && right > pos.x &&
                         top < pos.y && bottom > pos.y) {
-                        this.setState({ focus: parseInt(n.dataset.idx) });
+                        this.setState({ focus: parseInt(n.dataset.id) });
                         rects.push({x:pos.x, y:h.y, width:2, height:h.bottom-h.top});
                     }
 
@@ -163,7 +230,7 @@ export default class App extends Component {
 
             _reindex(items) {
               let idx = 0;
-              items.forEach( (item)=> { item.idx=idx++; } );
+              items.forEach( (item)=> { item.id=idx++; } );
             },
 
             _createAnnotation(params) {
@@ -178,7 +245,7 @@ export default class App extends Component {
                 this._reindex(annotations);
                 this.setState({ annotations: annotations });
 
-                // this.onCreate(annotation)
+                this.onCreate(annotation)
             },
 
             _updateAnnotation(params) {
@@ -201,7 +268,7 @@ export default class App extends Component {
                   this.draw();
                   this.clearSelection();
 
-                  // this.onUpdate(annotation);
+                  this.onUpdate(annotation);
               } catch(e) {
                   // why?
                   console.log(e);
@@ -212,6 +279,7 @@ export default class App extends Component {
               if (this.state.focus != null) {
                 return this.state.annotations[this.state.focus];
               }
+              return null;
             },
 
             annotate(params) {
@@ -228,8 +296,8 @@ export default class App extends Component {
             },
 
             comment(params) {
-                params.id = this.focus;
-                this._updateAnnotation(params);
+                // params.id = this.focus;
+                // this._updateAnnotation(params);
             },
 
             erase(idx) {
@@ -240,7 +308,7 @@ export default class App extends Component {
                     this.draw();
                     this.clearSelection();
 
-                    // this.onDelete(annotation);
+                    this.onDelete(annotation);
                 } catch(e) {
                     // why?
                 }
@@ -276,7 +344,7 @@ export default class App extends Component {
                 rect.ready = true;
                 this.setState({ selectionBounds: rect });
               } catch(e) {
-                // this.log(e);
+                // this.$api.debug.log(e);
               }
             }, 450),
 
@@ -324,10 +392,13 @@ export default class App extends Component {
             },
 
             accountForOffsets: _.debounce(function() {
-              let canvas = document.querySelector('.annot8-canvas');
-              let canvasRect = canvas.getBoundingClientRect();
-              let rootRect = this.$root.getBoundingClientRect();
-              this.setState({ offset: { x: rootRect.left - canvasRect.left,y: rootRect.top - canvasRect.top } })
+              try {
+                let canvas = document.querySelector('.annot8-canvas');
+                let canvasRect = canvas.getBoundingClientRect();
+                let rootRect = this.$root.getBoundingClientRect();
+                this.setState({ offset: { x: rootRect.left - canvasRect.left,y: rootRect.top - canvasRect.top } })
+              } catch(e) {
+              }
             }, 250),
 
             draw() {
@@ -358,7 +429,7 @@ export default class App extends Component {
                             y: r.y - 2,
                             width: r.width,
                             height: r.height,
-                            idx: idx,
+                            id: idx,
                             tag: a.tag,
                         });
                     });
@@ -411,6 +482,12 @@ export default class App extends Component {
                 menu = ''; // toggle
               }
               this.setState({ subMenu: menu });
+            },
+
+            openShareLink(event) {
+              event.preventDefault();
+              window.open(event.srcElement.href, '', 
+                'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=300,width=600');
             }
         });
     }
@@ -420,7 +497,7 @@ export default class App extends Component {
         let showEditUI = (state.menu == 'edit' && state.focus!=null);
         let showAnyUI = showCreateUI | showEditUI;
 
-        return <div id="annot8AppElement">
+        return <div>
             <Debug
                 menu={ state.menu + (state.subMenu ? '-' + state.subMenu : '') }
                 focus={ state.focus }
@@ -429,11 +506,6 @@ export default class App extends Component {
                 bounds={ state.selectionBounds }
                 annotations={ state.annotations }
             ></Debug>
-            
-            <div class="annot8-ui">
-            { showCreateUI ? (<button onClick={ e => this.annotate({}) }>Annotate</button>) : null }
-            { showEditUI ? (<button onClick={ e => this.erase(state.focus) }>Erase</button>) : null }
-            </div>
 
             <Highlights
                 focus={ state.focus }
@@ -441,6 +513,8 @@ export default class App extends Component {
                 canvas={ state.canvas }
                 highlights={ state.highlights }>
             </Highlights>
+
+            <Icons></Icons>
 
             { showAnyUI ? (<UI menu={ state.menu } subMenu={state.subMenu} ></UI>) : null }
         </div>;

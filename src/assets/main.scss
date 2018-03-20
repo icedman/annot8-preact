@@ -94,34 +94,22 @@ $hl-color6: rgb(255,100,100); /*red*/
   color: #a0a0a0;
   font-size:8pt; 
 }
-.annot8-toolbar-button {
+.annot8-toolbar-button,
+.annot8-toolbar-button:hover {
   display: inline-block;
   overflow: hidden;
   background: transparent;
   color: #fff;
   width: 40px;
   height: 38px;
-  padding-top: 8px;
-  padding-bottom: 4px;
+  padding:0px; margin:0px;
   border: 0px;
   --border:1px solid red;
 }
 .annot8-toolbar-icon {
   color: #fff;
   fill: #fff;
-  display: inline-block;
-}
-.annot8-toolbar-button[data-tag='yellow'] .annot8-toolbar-icon {
-  color: yellow;
-  fill: yellow;
-}
-.annot8-toolbar-button[data-tag='green'] .annot8-toolbar-icon {
-  color: green;
-  fill: green;
-}
-.annot8-toolbar-button[data-tag='blue'] .annot8-toolbar-icon {
-  color: blue;
-  fill: blue;
+  --border:1px solid red; 
 }
 
 .annot8-ui,

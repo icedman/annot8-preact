@@ -3,7 +3,36 @@ import { h, render, Component } from 'preact';
 import { _ } from './libs.js';
 
 export default class Debug extends Component {
+
+    constructor() {
+        super();
+        this.state = {
+            variables: {},
+            logs: []
+        }
+
+        Object.assign(this.$api,{ 
+            debug: {
+                log: (msg)=> this.log(msg)
+            }
+        });
+    }
+
+    log(msg) {
+        if (!this.$config.debug)
+            return;
+
+        console.log(msg);
+
+        let logs = [...this.state.logs];
+        logs.push(msg);
+        this.setState({logs:logs});
+    }
+
     render(props, state) {
+        if (!this.$config.debug)
+            return h();
+        
         let rect = { ready: false };
         if (props.bounds) {
             rect = JSON.stringify(props.bounds);
@@ -18,6 +47,11 @@ export default class Debug extends Component {
             annotations.push( (<li>{a.range}</li>) )
         });
 
+        let logs = [];
+        this.state.logs.forEach( a=> {
+            logs.push( (<li>Error: {a}</li>) )
+        });
+
         return <div class="annot8-ui">
         <h2>Debug</h2>
             <ul>
@@ -29,6 +63,7 @@ export default class Debug extends Component {
             </ul>
             <ul>
             { annotations }
+            { logs }
             </ul>
         </div>;
     }
