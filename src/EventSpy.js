@@ -1,5 +1,7 @@
 'use strict';
 
+import { _ } from './libs.js';
+
 var rootElement = null;
 var selection = null;
 var selectedRange = null;
@@ -28,7 +30,22 @@ function isElementWithinUI(elm) {
   return false;
 }
 
+/*
+var disableSelection = false;
+function temporarilyDisableSelection() {
+  disableSelection = true;
+  enableSelection();
+}
+var enableSelection = _.debounce(function() {
+  disableSelection = false;
+  onSelectionChange(null);
+}, 500);
+*/
+
 function onSelectionChange(evt) {
+  // if (disableSelection) {
+  //   return;
+  // }
   /* evt is not used */
 
   var hasSelection = false;
@@ -46,6 +63,8 @@ function onSelectionChange(evt) {
                   }
               // }
           }
+        } else {
+          // temporarilyDisableSelection();
         }
       }
 

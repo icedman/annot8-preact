@@ -45,7 +45,7 @@ export default class App extends Component {
           selectionBounds: () => this.state.selectionBounds,
           clear: () => {
             this.setState({ focus: null });
-            this.setState({ menu: null, subMenu: null });
+            this.setState({ menu: null, _subMenu: null });
             this.clearSelection();
           }
         });
@@ -70,7 +70,6 @@ export default class App extends Component {
         // find the root
         //------------------
         this.$root = null;
-        this.$config.selector = [];
         for(var sel of this.$config.selector) {
             var elm = document.querySelector(sel);
             if (elm) {
@@ -121,6 +120,11 @@ export default class App extends Component {
         EventSpy.start(this.$root,
             /* selection callback */
             (sel, range) => {
+                if (!sel)
+                  return;
+                if (this.state.subMenu == 'comments') {
+                  this.setState({ subMenu: null });
+                }
                 this.setState({ selectionBounds: { ready: false } });
                 this.onSelectionChanged(sel, range);
             },
@@ -131,7 +135,7 @@ export default class App extends Component {
             },
             /* mouse callback */
             (pos, src) => {
-                this.setState({ menu: null, subMenu: null });
+                this.setState({ menu: null, _subMenu: null });
                 this.setState({ selectionBounds: { ready: false } });
                 this.onMouseUp(pos);
             },
@@ -236,7 +240,7 @@ export default class App extends Component {
                     this.setState({ focus: null });
                     this.setState({ menu: 'create' });
                 }
-            }, 50),
+            }, 500),
 
             onDocumentResized: _.debounce(()=>{
                 this.setState({ offset: null });
@@ -355,8 +359,8 @@ export default class App extends Component {
             },
 
             comment(params) {
-              console.log(params);
               this._updateAnnotation(params);
+              this.setState({ menu: null, subMenu: null });
             },
 
             erase(idx) {
@@ -408,7 +412,7 @@ export default class App extends Component {
               } catch(e) {
                 // this.$api.debug.log(e);
               }
-            }, 450),
+            }, 50),
 
             calculateBoundsFromRects: function(rects) {
               let rect = {};

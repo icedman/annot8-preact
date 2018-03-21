@@ -30,7 +30,6 @@ try {
     if (!Component.prototype.$config.mobile) {
       Component.prototype.$config.mobile = document.querySelector('html').offsetWidth < 600 ? 'smallScreen' : null;
     }
-    // Component.prototype.$config.mobile = true;
 } catch(e) {
 }
 

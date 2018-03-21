@@ -25,18 +25,18 @@ export default class UI extends Component {
                 let uiElement = document.querySelector('.annot8-toolbar-inner');
                 if (!uiElement || this.props.subMenu == 'comments') {
                     uiElement = document.querySelector('.annot8-modal-container');
-                    // todo!!!
                 }
 
-                // if toolbar
                 if (uiElement && uiElement.offsetWidth) {
                     let rect = {
                         offsetX: 0,
                         offsetY: 0,
-                        height: uiElement.offsetHeight + 4,
+                        height: uiElement.offsetHeight + 10,
                         width: uiElement.offsetWidth,
                         ready: false
                     };
+                    if (rect.width < 200)
+                        rect.width = 200;
                     this.setState({toolbarRect:rect});
                     setTimeout(()=> {
                     let uiContainerElm = document.querySelector('.annot8-toolbar-container');
@@ -115,15 +115,12 @@ export default class UI extends Component {
         });
 
         let bounds = this.$api.selectionBounds();        
-
-        let containerStyle = { position: 'absolute', top: '0px', left: '0px' };
+        let containerStyle = { position: 'absolute', top: '-1000px', left: '-1000px' };
 
         let top = 0;
         let left = 0;
         if (!this.$config.mobile && bounds.ready) {
 
-            containerStyle = { position: 'absolute', top: '0px', left: '0px' };
-            
             left = bounds.x + (bounds.width/2) - (state.toolbarRect.width/2);
             top = bounds.y - this.state.toolbarRect.height;
 
@@ -151,18 +148,21 @@ export default class UI extends Component {
             left: left + 'px'
         }
 
-        if (this.$config.mobile) {
-            containerStyle = { position: 'fixed', left: '0px', bottom: '10px' };
-            toolbarStyle = { position: 'relative', top: '0px', left: '0px' };
-        }
 
         Object.assign(containerStyle, {
             zIndex: 999,
+            width: '0px',
+            height: '0px',
             // border: '2px solid red',
-            minHeight: '50px',
-            transition: (bounds.ready && state.toolbarRect.ready) ? 'opacity 250ms' : '',
+            // minHeight: '50px',
+            transition: (bounds.ready && state.toolbarRect.ready) ? 'opacity 500ms' : '',
             opacity: (bounds.ready && state.toolbarRect.ready) ? 1 : 0
         });
+
+        if (this.$config.mobile) {
+            containerStyle = { position: 'fixed', left: '0px', bottom: '10px', width:null, height:null };
+            toolbarStyle = { position: 'relative', top: '0px', left: '0px' };
+        }
 
         let showComments = (ui == 'comments');
         let uiState = ui + buttons.length + (showComments ? 1 : 0);
@@ -176,10 +176,13 @@ export default class UI extends Component {
         };
 
         return <div class="annot8-toolbar-container" style={containerStyle}>
-        <div class="annot8-toolbar" style={toolbarStyle}>
-        <div class="annot8-ui annot8-toolbar-inner">
-        {buttons}
-        </div>
+        <div class="annot8-ui annot8-toolbar" style={toolbarStyle}>
+        
+        {!showComments?
+            <div class="annot8-ui annot8-toolbar-inner">
+            {buttons}
+            </div>
+            : '' }
 
         <div class="annot8-ui annot8-modal-container">
         {showComments?<Dialog ui={commands} edit={false} canEdit={true}></Dialog>:''}

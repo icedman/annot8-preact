@@ -66,6 +66,10 @@ export default class Debug extends Component {
         return <div class="annot8-ui">
         <h2>Debug</h2>
             <ul>
+            { logs }
+            </ul>
+            
+            <ul>
             <li><label>Annotation:</label> { annot } </li>
             <li><label>Menu:</label> { props.menu }</li>
             <li><label>Focus:</label> { props.focus }</li>
@@ -73,11 +77,9 @@ export default class Debug extends Component {
             <li><label>Range:</label> { range }</li>
             <li><label>Bounds:</label> { rect }</li>
             </ul>
+
             <ul>
             { annotations }
-            </ul>
-            <ul>
-            { logs }
             </ul>
         </div>;
     }
