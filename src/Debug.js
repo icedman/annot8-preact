@@ -55,7 +55,7 @@ export default class Debug extends Component {
             if (typeof(msg) == 'object') {
                 msg = JSON.stringify(msg);
             }
-            logs.push( (<li>{type}: {msg}</li>) )
+            logs.unshift( (<li>{type}: {msg}</li>) )
         });
 
         let annot = '';
@@ -75,6 +75,8 @@ export default class Debug extends Component {
             </ul>
             <ul>
             { annotations }
+            </ul>
+            <ul>
             { logs }
             </ul>
         </div>;

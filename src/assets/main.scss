@@ -43,7 +43,6 @@ $hl-color6: rgb(255,100,100); /*red*/
 }
 .annot8-toolbar {
   display: block;
-  min-width: 200px;
   --padding: 4px;
   --background-color: #c0c0c0;
   transition: opacity 250ms;
@@ -58,11 +57,15 @@ $hl-color6: rgb(255,100,100); /*red*/
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
+/*
 .annot8-toolbar-container,
 .annot8-toolbar,
 .annot8-modal-container {
-  --border: 2px solid blue;
+  border: 2px solid blue;
+  min-width: 200px;
 }
+*/
+
 .annot8-modal-container * {
   font-family: tahoma,arial;
   font-size: 10pt;  
@@ -103,8 +106,14 @@ $hl-color6: rgb(255,100,100); /*red*/
   width: 40px;
   height: 38px;
   padding:0px; margin:0px;
+  padding-top:4px;
   border: 0px;
   --border:1px solid red;
+}
+.annot8-toolbar-button,
+.annot8-toolbar-button:focus,
+.annot8-toolbar-button:hover {
+  outline: none;
 }
 .annot8-toolbar-icon {
   color: #fff;
@@ -122,19 +131,6 @@ $hl-color6: rgb(255,100,100); /*red*/
   user-select: none;
   outline: 0;
 }
-
-.annot8-toolbar-button[data-tag='tag1'] .annot8-toolbar-icon,
-.annot8-tag-tag1 { color: $hl-color1;    fill: $hl-color1;}
-.annot8-toolbar-button[data-tag='tag2'] .annot8-toolbar-icon,
-.annot8-tag-tag2 { color: $hl-color2;  fill: $hl-color2;}
-.annot8-toolbar-button[data-tag='tag3'] .annot8-toolbar-icon,
-.annot8-tag-tag3 { color: $hl-color3;  fill: $hl-color3;}
-.annot8-toolbar-button[data-tag='tag4'] .annot8-toolbar-icon,
-.annot8-tag-tag4 { color: $hl-color4;  fill: $hl-color4;}
-.annot8-toolbar-button[data-tag='tag5'] .annot8-toolbar-icon,
-.annot8-tag-tag5 { color: $hl-color5;  fill: $hl-color5;}
-.annot8-toolbar-button[data-tag='tag6'] .annot8-toolbar-icon,
-.annot8-tag-tag6 { color: $hl-color5;  fill: $hl-color5;}
 
 .annot8-modal-container {
   margin:0px;
@@ -164,8 +160,9 @@ $hl-color6: rgb(255,100,100); /*red*/
 }
 
 .annot8-modal-body textarea {
-  background-color: transparent;
+  background-color: red;
 }
+
 .annot8-modal-body input[type=text],
 .annot8-modal-body textarea,
 .annot8-modal-body input[type=text]:focus,
@@ -182,9 +179,22 @@ $hl-color6: rgb(255,100,100); /*red*/
   background-color:$hl-color1;
 }
 .annot8-hl.annot8-active {
-  fill-opacity: 0.8;
-  opacity: 0.8;
+  fill-opacity: 0.7;
+  opacity: 0.7;
 }
+
+.annot8-toolbar-button[data-tag='tag1'] .annot8-toolbar-icon,
+.annot8-tag-tag1 { color: $hl-color1;    fill: $hl-color1;}
+.annot8-toolbar-button[data-tag='tag2'] .annot8-toolbar-icon,
+.annot8-tag-tag2 { color: $hl-color2;  fill: $hl-color2;}
+.annot8-toolbar-button[data-tag='tag3'] .annot8-toolbar-icon,
+.annot8-tag-tag3 { color: $hl-color3;  fill: $hl-color3;}
+.annot8-toolbar-button[data-tag='tag4'] .annot8-toolbar-icon,
+.annot8-tag-tag4 { color: $hl-color4;  fill: $hl-color4;}
+.annot8-toolbar-button[data-tag='tag5'] .annot8-toolbar-icon,
+.annot8-tag-tag5 { color: $hl-color5;  fill: $hl-color5;}
+.annot8-toolbar-button[data-tag='tag6'] .annot8-toolbar-icon,
+.annot8-tag-tag6 { color: $hl-color5;  fill: $hl-color5;}
 
 .annot8-hl-tag1 { background-color: $hl-color1; }
 .annot8-hl-tag2 { background-color: $hl-color2; }

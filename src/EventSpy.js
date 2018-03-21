@@ -103,7 +103,7 @@ function onTouchStart(evt) {
 }
 
 function onKeyDown(evt) {
-  if (evt.keyCode == 27) {
+  if ([27,8].indexOf(evt.keyCode)!=-1) {
     keyCallback(evt.keyCode);
   }
 }

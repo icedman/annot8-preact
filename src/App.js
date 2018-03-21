@@ -41,6 +41,7 @@ export default class App extends Component {
           comment: (params) => this.comment(params),
           menu: (params) => this.requestMenu(params),
           annotation: () => this.annotation(),
+          tag: () => this.state.tag,
           selectionBounds: () => this.state.selectionBounds,
           clear: () => {
             this.setState({ focus: null });
@@ -60,9 +61,16 @@ export default class App extends Component {
 
     init() {
         // run!
+        //------------------
+        // expose ourself
+        //------------------
         window.Annot8 = this;
 
-        this.$root = document.body;
+        //------------------
+        // find the root
+        //------------------
+        this.$root = null;
+        this.$config.selector = [];
         for(var sel of this.$config.selector) {
             var elm = document.querySelector(sel);
             if (elm) {
@@ -70,12 +78,46 @@ export default class App extends Component {
               break;
             }
         }
+        if (!this.$root) {
+          var pars = document.querySelectorAll('article p');
+          var firstParagraph = null;
+          for(var p of pars) {
+            if (!p.className) {
+              firstParagraph = p;
+              break;
+            }
+          }
+          if (firstParagraph) {
+            var root = firstParagraph.parentElement;
+            while(root) {
+              if (root.nodeName == 'DIV' && root.className || root.nodeName == 'ARTICLE') {
+                this.$root = root;
+                this.$api.debug.log('selector @' + root.nodeName + ':' + root.className);
+                break;
+              }
+              root = root.parentElement;
+            }
+          }
+        } else {
+          this.$api.debug.log('Selector @ found ' + this.$config.selector);
+        }
+        if (!this.$root) {
+          this.$api.debug.log('Selector @ fallback to document.body');
+          this.$root = document.body;
+        }
+
+        //------------------
+        // find our app element
+        //------------------
         this.$el = document.querySelector('#annot8-app');
         try {
             this.$root.appendChild(this.$el);
         } catch(e) {
         }
 
+        //------------------
+        // fire up events
+        //------------------
         EventSpy.start(this.$root,
             /* selection callback */
             (sel, range) => {
@@ -84,6 +126,7 @@ export default class App extends Component {
             },
             /* resize callback */
             () => {
+                this.setState({ menu: null, subMenu: null });
                 this.onDocumentResized();
             },
             /* mouse callback */
@@ -94,9 +137,17 @@ export default class App extends Component {
             },
             /* key callback */
             (keycode) => {
-              if (keycode == 27) {
+              switch(keycode) {
+              case 8:
+                if (this.state.focus == null || this.state.subMenu == 'comments') {
+                  return;
+                }
+                this.erase(this.state.focus);
+                break;
+              case 27:
                 this.setState({ tag: '', menu: null, subMenu: null });
                 this.clearSelection();
+                break;
               }
             }
         );
@@ -104,7 +155,10 @@ export default class App extends Component {
         this.onRead();
     }
 
+    //------------------
     // a little bit declarative
+    // required for debounced
+    //------------------
     methods() {
         Object.assign(this,
         {
@@ -114,6 +168,7 @@ export default class App extends Component {
                 annotations.push(Object.assign(a, { rects:[] }));
               });
 
+              this._reindex(annotations);
               this.setState({annotations: annotations});
 
               this.draw();
@@ -186,7 +241,7 @@ export default class App extends Component {
             onDocumentResized: _.debounce(()=>{
                 this.setState({ offset: null });
                 this.draw();
-            }, 50),
+            }, 150),
 
             onMouseUp: _.debounce(function(pos) {
                 this.setState({ focus: null });
@@ -286,6 +341,7 @@ export default class App extends Component {
               this.$api.debug.log(params);
 
               params = params || {};
+              this.setState({tag: params.tag || ''});
 
               if (this.state.selection) {
                 this._createAnnotation(params);
@@ -295,24 +351,28 @@ export default class App extends Component {
 
               this.draw();
               this.clearSelection();
+              this.setState({ menu: null, subMenu: null });
             },
 
             comment(params) {
-                // params.id = this.focus;
-                // this._updateAnnotation(params);
+              console.log(params);
+              this._updateAnnotation(params);
             },
 
             erase(idx) {
                 try {
+                    let annotation = this.state.annotations[idx];
                     let annotations = [ ...this.state.annotations ];
                     annotations.splice(idx,1);
+                    this._reindex(annotations);
                     this.setState({ annotations: annotations });
                     this.draw();
                     this.clearSelection();
-
                     this.onDelete(annotation);
                 } catch(e) {
                     // why?
+                    console.log(idx);
+                    console.log(e);
                 }
             },
 
@@ -422,7 +482,6 @@ export default class App extends Component {
                 this.setState({ canvas: canvas });
 
                 let rects = [];
-                let idx = 0;
                 this.state.annotations.forEach(a=> {
                     a.rects.forEach(r=> {
                         if (!r) return; // why would this happen?
@@ -431,13 +490,12 @@ export default class App extends Component {
                             y: r.y - 2,
                             width: r.width,
                             height: r.height,
-                            id: idx,
+                            id: a.id,
                             tag: a.tag,
                         });
                     });
                     // cleanup so rects doesn't get saved
                     a.rects = null;
-                    idx++;
                 });
 
                 this.setState({ highlights: rects });
